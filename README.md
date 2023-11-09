@@ -1,33 +1,27 @@
-# Netlify Remix Template
+# React + TypeScript + Vite
 
-Welcome to the Netlify Remix Template project.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-To use the template, run
+Currently, two official plugins are available:
 
-```bash
-npx create-remix@latest --template netlify/remix-template
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+
+- Configure the top-level `parserOptions` property like this:
+
+```js
+   parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    project: ['./tsconfig.json', './tsconfig.node.json'],
+    tsconfigRootDir: __dirname,
+   },
 ```
 
-
-This project includes:
-
-- Netlify Functions template for Remix sites
-- Netlify Edge Functions template for Remix sites
-
-From the `create-remix` command, you may pass `--netlify-edge` or `--no-netlify-edge` to generate a template that uses Netlify Edge or Serverless functions explicitly. Without passing this option, the create workflow will ask you which you would prefer.
-
-## Development
-
-There is no need to run `npm install` as this is a template. The Remix CLI will install the dependencies for you. Make changes to files as you see fit. If there are transformations for files for either the Netlify Functions or Netlify Edge Functions template, make the appropriate changes to the `remix.init/index.js` file.
-
-If you're new to Remix stacks and the remix.init concept, see the official [Remix Stacks](https://remix.run/stacks) documentation.
-
-### Testing your changes
-
-Run
-
-```bash
-npx create-remix@latest --template ./
-```
-
-to test your changes to the template. Follow the steps the Remix CLI prompts you with to create a new project. Ensure to test for both the Netlify Functions template and the Netlify Edge Functions template.
+- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
+- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list

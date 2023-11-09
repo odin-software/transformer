@@ -1,33 +1,28 @@
 {
   "name": "transformer",
-  "version": "0.1.0",
   "private": true,
-  "sideEffects": false,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "remix build",
-    "dev": "remix dev",
-    "start": "netlify serve",
-    "typecheck": "tsc -b"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@netlify/remix-adapter": "^2.2.0",
-    "@remix-run/node": "^2.2.0",
-    "@remix-run/react": "^2.2.0",
-    "cross-env": "^7.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.2.0",
-    "@remix-run/eslint-config": "^2.2.0",
-    "@remix-run/serve": "^2.2.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "eslint": "^8.27.0",
-    "typescript": "^5.2.2"
-  },
-  "engines": {
-    "node": ">=18"
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.0.3",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5"
   }
 }
