@@ -43,7 +43,15 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Outlet />
+        <main className="flex flex-col items-center h-screen bg-gradient-to-b	from-gradientT to-gradientB">
+          <div className="flex flex-col items-center justify-center w-full h-60">
+            <div className="text-right">
+              <h1 className="title">Transformer</h1>
+              <sub className="subtitle">of images</sub>
+            </div>
+          </div>
+          <Outlet />
+        </main>
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
