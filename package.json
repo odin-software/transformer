@@ -1,5 +1,6 @@
 {
-  "name": "",
+  "name": "transformer",
+  "version": "0.0.1",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -12,13 +13,15 @@
     "redirects:disable": "shx rm -f public/_redirects"
   },
   "dependencies": {
+    "@fontsource/lato": "^5.0.17",
     "@netlify/functions": "^2.0.0",
     "@netlify/remix-adapter": "^2.0.0",
     "@remix-run/react": "^2.2.0",
     "cross-env": "^7.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "shx": "^0.3.4"
+    "shx": "^0.3.4",
+    "tailwindcss": "^3.3.5"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.2.0",
