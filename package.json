@@ -1,28 +1,35 @@
 {
-  "name": "transformer",
+  "name": "",
   "private": true,
-  "version": "0.0.0",
+  "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "build": "npm run redirects:enable && remix build",
+    "dev": "npm run redirects:disable && remix dev",
+    "start": "netlify serve",
+    "typecheck": "tsc -b",
+    "redirects:enable": "shx cp .redirects public/_redirects",
+    "redirects:disable": "shx rm -f public/_redirects"
   },
   "dependencies": {
+    "@netlify/functions": "^2.0.0",
+    "@netlify/remix-adapter": "^2.0.0",
+    "@remix-run/react": "^2.2.0",
+    "cross-env": "^7.0.3",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "shx": "^0.3.4"
   },
   "devDependencies": {
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "@vitejs/plugin-react": "^4.0.3",
-    "eslint": "^8.45.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.3",
-    "typescript": "^5.0.2",
-    "vite": "^4.4.5"
+    "@remix-run/dev": "^2.2.0",
+    "@remix-run/eslint-config": "^2.2.0",
+    "@remix-run/serve": "^2.2.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "eslint": "^8.27.0",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
