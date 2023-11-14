@@ -5,24 +5,34 @@ import { useCallback, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone-esm";
 
 export async function action({ request }: ActionFunctionArgs) {
+  console.log(request);
   const data = await request.formData();
+  console.log(data);
   const files = Object.fromEntries(data.entries());
   console.log(files);
+  return null;
 }
 
 export default function Index() {
-  const ref = useRef<HTMLInputElement>(null);
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: { "image/*": [".png", ".jpg", ".jpeg", ".gif"] },
-    multiple: true,
-    async onDrop(acceptedFiles) {
-      console.log(acceptedFiles);
-    }
-  });
+  const { acceptedFiles, isDragActive, getRootProps, getInputProps } =
+    useDropzone({
+      accept: { "image/*": [".png", ".jpg", ".jpeg", ".gif"] },
+      multiple: true,
+      maxSize: 5 * 1024 * 1024,
+      async onDrop(acceptedFiles: File[]) {
+        console.log(acceptedFiles);
+        return acceptedFiles;
+      }
+    });
+  const files = acceptedFiles.map((file) => (
+    <li key={file.name}>
+      {file.name} - {file.size} bytes
+    </li>
+  ));
 
   return (
     <section className="font-lato">
-      <Form className="col-span-full">
+      <Form method="post" className="col-span-full">
         <label
           htmlFor="cover-photo"
           className="block text-sm font-medium leading-6 text-white"
@@ -46,7 +56,6 @@ export default function Index() {
                 <input
                   name="file-upload"
                   className="sr-only"
-                  ref={ref}
                   {...getInputProps()}
                 />
               </label>
@@ -62,7 +71,13 @@ export default function Index() {
             </div>
           </div>
         </div>
+        <div className="">
+          <button type="submit">Convert</button>
+        </div>
       </Form>
+      <div>
+        <ul>{files}</ul>
+      </div>
     </section>
   );
 }
