@@ -8,8 +8,18 @@ body {
 }
 
 .title {
-  @apply font-lato text-6xl font-bold text-[#EDF2EF];
-  animation: 1s ease-in-out appearing;
+  @apply font-lato text-6xl font-bold text-titleText;
+  letter-spacing: 0.4rem;
+  text-transform: uppercase;
+  animation: 800ms ease-in-out appearing, 1.2s ease flicker infinite alternate;
+}
+
+.subtitle {
+  @apply font-lato text-titleText;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: 800ms ease-in-out appearing forwards;
+  animation-delay: 1.2s;
 }
 
 @keyframes appearing {
@@ -20,5 +30,16 @@ body {
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 0.8;
+    text-shadow: 2px 2px 4px #6096ba;
+  }
+  100% {
+    opacity: 1;
+    text-shadow: 2px 2px 8px #6096ba;
   }
 }
