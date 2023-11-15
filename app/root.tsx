@@ -7,6 +7,7 @@ import {
   Scripts,
   ScrollRestoration
 } from "@remix-run/react";
+import { ActionFunctionArgs } from "@remix-run/router";
 import stylesheet from "~/tailwind.css";
 import lato100 from "@fontsource/lato/100.css";
 import lato300 from "@fontsource/lato/300.css";

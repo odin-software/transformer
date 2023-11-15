@@ -7,7 +7,9 @@ export default {
       colors: {
         gradientT: "#27272A",
         gradientB: "#18181B",
-        titleText: "#EDF2EF"
+        titleText: "#EDF2EF",
+        cinereous: "#584D4B",
+        powder: "#FBFEF9"
       },
       fontFamily: {
         lato: ["Lato", "sans-serif"]
