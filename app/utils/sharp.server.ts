@@ -5,7 +5,7 @@ export async function convertToWebp(
   width?: number,
   height?: number
 ) {
-  return sharp(path).resize(width, height).webp({ quality: 80 });
+  return sharp(path).resize(width, height).webp({ quality: 80 }).toBuffer();
 }
 
 export async function convertToPNG(
@@ -13,7 +13,7 @@ export async function convertToPNG(
   width?: number,
   height?: number
 ) {
-  return sharp(path).resize(width, height).png({ quality: 80 });
+  return sharp(path).resize(width, height).png({ quality: 80 }).toBuffer();
 }
 
 export async function convertSwitch(

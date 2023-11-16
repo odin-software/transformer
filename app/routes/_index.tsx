@@ -4,6 +4,7 @@ import { useDropzone } from "react-dropzone-esm";
 import { ActionFunctionArgs } from "@remix-run/router";
 import { useActionData, useNavigation, useSubmit } from "@remix-run/react";
 import { Transition } from "@headlessui/react";
+import { decode } from "base64-arraybuffer";
 
 import { bytesToSize } from "~/utils/calc";
 import { convertSwitch } from "~/utils/sharp.server";
@@ -13,36 +14,42 @@ import { Loading } from "~/components/Loading";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const data = await request.formData();
-  console.log("data", data);
   const supabase = createSupabaseServerClient({ request });
   const action = data.get("action");
-  console.log("action", action);
+
   data.delete("action");
 
   const entries = Array.from(data.entries());
-  console.log("entries", entries);
   const convertTo = action === "to WebP" ? "webp" : "png";
 
   const [name, blob] = entries[0] as [string, Blob];
   const blobBuffer = await blob.arrayBuffer();
-  console.log("blobBuffer", blobBuffer);
-  const sharpInstance = await convertSwitch(convertTo, blobBuffer);
-  const buffer = await sharpInstance.toBuffer();
-  console.log("buffer", buffer);
-  const file = new File([buffer], name, { type: `image/${convertTo}` });
+  const buffer = await convertSwitch(convertTo, blobBuffer);
+  const bufferWithMime = `data:image/${convertTo};base64,${buffer.toString(
+    "base64"
+  )}`;
+  const base64Str = bufferWithMime.includes("base64,")
+    ? bufferWithMime.substring(
+        bufferWithMime.indexOf("base64,") + "base64,".length
+      )
+    : bufferWithMime;
+
+  const ab = decode(base64Str);
   const uploadName = name.replace(/\.[^/.]+$/, `.${convertTo}`);
-  console.log("file", file);
   const supaError = await supabase.storage
     .from("transformer")
-    .upload(uploadName, file, {
+    .upload(uploadName, ab, {
+      contentType: `image/${convertTo}`,
       upsert: true
     });
   if (supaError.error) {
+    console.log(supaError.error);
     throw supaError.error;
   }
   const { data: url } = supabase.storage
     .from("transformer")
     .getPublicUrl(uploadName);
+  console.log(url.publicUrl);
 
   return { name: uploadName, url };
 };
@@ -79,7 +86,7 @@ export default function Index() {
     if (data) {
       return (
         <li className="flex w-full justify-between underline" key={data.name}>
-          <a href={data.url.publicUrl} target="_blank" download>
+          <a href={data.url.publicUrl} download={data.name} target="_blank">
             <span>{data.name}</span>
           </a>
         </li>
