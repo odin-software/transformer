@@ -20,7 +20,7 @@ body {
   opacity: 0;
   letter-spacing: 0.2rem;
   animation: 800ms ease-in-out appearing forwards;
-  animation-delay: 1.2s;
+  animation-delay: 1.0s;
 }
 
 @keyframes appearing {

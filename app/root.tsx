@@ -7,8 +7,8 @@ import {
   Scripts,
   ScrollRestoration
 } from "@remix-run/react";
-import { ActionFunctionArgs } from "@remix-run/router";
 import stylesheet from "~/tailwind.css";
+import componentsStylesheet from "./components/components.css";
 import lato100 from "@fontsource/lato/100.css";
 import lato300 from "@fontsource/lato/300.css";
 import lato400 from "@fontsource/lato/index.css";
@@ -17,6 +17,7 @@ import lato900 from "@fontsource/lato/900.css";
 
 export const links = () => [
   { rel: "stylesheet", href: stylesheet },
+  { rel: "stylesheet", href: componentsStylesheet },
   { rel: "stylesheet", href: lato100 },
   { rel: "stylesheet", href: lato300 },
   { rel: "stylesheet", href: lato400 },

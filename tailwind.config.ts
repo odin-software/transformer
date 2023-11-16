@@ -9,7 +9,8 @@ export default {
         gradientB: "#18181B",
         titleText: "#EDF2EF",
         cinereous: "#584D4B",
-        powder: "#FBFEF9"
+        powder: "#FBFEF9",
+        dark: "rgba(0, 0, 0, 0.8)",
       },
       fontFamily: {
         lato: ["Lato", "sans-serif"]
