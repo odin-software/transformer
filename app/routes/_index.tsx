@@ -13,19 +13,25 @@ import { Loading } from "~/components/Loading";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const data = await request.formData();
+  console.log("data", data);
   const supabase = createSupabaseServerClient({ request });
   const action = data.get("action");
+  console.log("action", action);
   data.delete("action");
 
   const entries = Array.from(data.entries());
+  console.log("entries", entries);
   const convertTo = action === "to WebP" ? "webp" : "png";
 
   const [name, blob] = entries[0] as [string, Blob];
   const blobBuffer = await blob.arrayBuffer();
+  console.log("blobBuffer", blobBuffer);
   const sharpInstance = await convertSwitch(convertTo, blobBuffer);
   const buffer = await sharpInstance.toBuffer();
+  console.log("buffer", buffer);
   const file = new File([buffer], name, { type: `image/${convertTo}` });
   const uploadName = name.replace(/\.[^/.]+$/, `.${convertTo}`);
+  console.log("file", file);
   const supaError = await supabase.storage
     .from("transformer")
     .upload(uploadName, file, {
