@@ -49,7 +49,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const { data: url } = supabase.storage
     .from("transformer")
     .getPublicUrl(uploadName);
-  console.log(url.publicUrl);
 
   return { name: uploadName, url };
 };
