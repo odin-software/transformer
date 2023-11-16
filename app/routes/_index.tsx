@@ -32,7 +32,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       upsert: true
     });
   if (supaError.error) {
-    return null;
+    throw supaError.error;
   }
   const { data: url } = supabase.storage
     .from("transformer")

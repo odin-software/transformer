@@ -1,5 +1,5 @@
 import { createServerClient } from "@supabase/auth-helpers-remix";
-// import { environment } from "./environment";
+import { environment } from "./environment";
 
 export const createSupabaseServerClient = ({
   request
@@ -7,9 +7,10 @@ export const createSupabaseServerClient = ({
   request: Request;
 }) => {
   const response = new Response();
+
   return createServerClient(
-    process.env.SUPABASE_URL || "",
-    process.env.SUPABASE_ANON_KEY || "",
+    environment.SUPABASE_URL || "",
+    environment.SUPABASE_ANON_KEY || "",
     {
       request,
       response
