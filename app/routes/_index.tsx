@@ -42,10 +42,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       contentType: `image/${convertTo}`,
       upsert: true
     });
+
   if (supaError.error) {
     console.log(supaError.error);
     throw supaError.error;
   }
+
   const { data: url } = supabase.storage
     .from("transformer")
     .getPublicUrl(uploadName);
