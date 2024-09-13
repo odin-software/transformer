@@ -1,5 +1,11 @@
 main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
 
+  height: 100%;
+  width: 100%;
 }
 
 h2 {
@@ -7,7 +13,18 @@ h2 {
   text-decoration: underline wavy var(--quartary-color);
 }
 
-#drop-area {
+.backdrop {
+  display: none;
+  position: absolute;
+  justify-content: center;
+  align-items: center;
+
+  height: 100vh;
+  width: 100%;
+}
+
+.backdrop.show {
+  display: flex;
 }
 
 #drop-area.highlight {

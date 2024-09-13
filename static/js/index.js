@@ -1,5 +1,5 @@
-const dropArea = document.querySelector("body");
-console.log(dropArea);
+const dropArea = document.querySelector("main");
+const backdrop = document.getElementById("backdrop");
 const submitButton = document.getElementById("submit-drop");
 if (submitButton) {
   submitButton.style.display = "none";
@@ -56,19 +56,19 @@ function uploadFile(file) {
 });
 
 ["dragenter", "dragover"].forEach((event) => {
-  dropArea?.addEventListener(event, highlight, false);
+  dropArea?.addEventListener(event, show, false);
 });
 
 ["dragleave", "drop"].forEach((event) => {
-  dropArea?.addEventListener(event, removeHighlight, false);
+  dropArea?.addEventListener(event, unshow, false);
 });
 
-function highlight(_e) {
-  dropArea?.classList.add("highlight");
+function show(_e) {
+  backdrop?.classList.add("show");
 }
 
-function removeHighlight(_e) {
-  dropArea?.classList.remove("highlight");
+function unshow(_e) {
+  backdrop?.classList.remove("show");
 }
 
 function preventDefaults(e) {
