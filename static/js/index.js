@@ -1,30 +1,31 @@
-const dropArea = document.querySelector("main");
+const mainArea = document.querySelector("main");
 const backdrop = document.getElementById("backdrop");
 const submitButton = document.getElementById("submit-drop");
+const fileList = document.getElementById("file-list");
+
 if (submitButton) {
   submitButton.style.display = "none";
 }
+
 const files = [];
 
-dropArea?.addEventListener("drop", handleDrop, false);
+backdrop?.addEventListener("drop", handleDrop, false);
 
 function handleDrop(event) {
-  // const fileList = document.getElementById("file-list");
   const dt = event.dataTransfer;
   const toSend = [...dt.files];
   handleFiles(toSend);
 
-  // const items = [...dt.items];
-  // items.forEach((item, i) => {
-  //   if (item.kind === "file") {
-  //     const file = item.getAsFile();
-  //     // console.log(file); // checking props
-  //     const li = document.createElement("li");
-  //     li.textContent = `file[${i}].name = ${file?.name}`;
-  //     fileList?.appendChild(li);
-  //     files.push(file);
-  //   }
-  // });
+  const items = [...dt.items];
+  items.forEach((item, i) => {
+    if (item.kind === "file") {
+      const file = item.getAsFile();
+      const li = document.createElement("li");
+      li.textContent = `${file?.name} - ${file?.size}`;
+      fileList?.appendChild(li);
+      files.push(file);
+    }
+  });
 }
 
 function handleFiles(files) {
@@ -52,15 +53,19 @@ function uploadFile(file) {
 /* Visual/Entry events */
 
 ["dragenter", "dragover", "dragleave", "drop"].forEach((event) => {
-  dropArea?.addEventListener(event, preventDefaults, false);
+  backdrop?.addEventListener(event, preventDefaults, false);
 });
 
 ["dragenter", "dragover"].forEach((event) => {
-  dropArea?.addEventListener(event, show, false);
+  mainArea?.addEventListener(event, show, false);
+});
+
+["dragenter", "dragover"].forEach((event) => {
+  backdrop?.addEventListener(event, show, false);
 });
 
 ["dragleave", "drop"].forEach((event) => {
-  dropArea?.addEventListener(event, unshow, false);
+  backdrop?.addEventListener(event, unshow, false);
 });
 
 function show(_e) {
