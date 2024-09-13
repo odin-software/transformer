@@ -1,45 +1,77 @@
-const dropElement = document.getElementById("drop-area");
-console.log(dropElement ?? "no");
+const dropArea = document.querySelector("body");
+console.log(dropArea);
+const submitButton = document.getElementById("submit-drop");
+if (submitButton) {
+  submitButton.style.display = "none";
+}
+const files = [];
 
-dropElement?.addEventListener("drop", (event) => {
-  event.preventDefault();
-  const fileList = document.getElementById("file-list");
-  if (event.dataTransfer?.items) {
-    console.log("dt items");
-    [...event.dataTransfer.items].forEach((item, i) => {
-      if (item.kind === "file") {
-        const file = item.getAsFile();
-        console.log(file); // checking props
-        var li = document.createElement("li");
-        li.textContent = `file[${i}].name = ${file?.name}`;
-        fileList?.appendChild(li);
-      }
-    });
-  } else {
-    console.log("dt files");
-    [...(event.dataTransfer?.files ?? [])].forEach((file, i) => {
-      console.log(`... file[${i}].name = ${file?.name}`);
-    });
+dropArea?.addEventListener("drop", handleDrop, false);
+
+function handleDrop(event) {
+  // const fileList = document.getElementById("file-list");
+  const dt = event.dataTransfer;
+  const toSend = [...dt.files];
+  handleFiles(toSend);
+
+  // const items = [...dt.items];
+  // items.forEach((item, i) => {
+  //   if (item.kind === "file") {
+  //     const file = item.getAsFile();
+  //     // console.log(file); // checking props
+  //     const li = document.createElement("li");
+  //     li.textContent = `file[${i}].name = ${file?.name}`;
+  //     fileList?.appendChild(li);
+  //     files.push(file);
+  //   }
+  // });
+}
+
+function handleFiles(files) {
+  if (Array.isArray(files)) {
+    files.forEach(uploadFile);
+    return;
   }
-  console.log("DragDrop");
-});
+  [...files].forEach(uploadFile);
+}
+
+function uploadFile(file) {
+  const url = "/clasify";
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  fetch(url, {
+    method: "POST",
+    body: formData,
+  })
+    .then(() => {})
+    .catch(() => {});
+}
 
 /* Visual/Entry events */
 
-dropElement?.addEventListener("dragenter", (event) => {
-  console.log("DragEnter");
-  if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = "copy";
-  }
-  dropElement.style.backgroundColor = "#BB8888";
+["dragenter", "dragover", "dragleave", "drop"].forEach((event) => {
+  dropArea?.addEventListener(event, preventDefaults, false);
 });
 
-dropElement?.addEventListener("dragover", (event) => {
-  event.preventDefault();
-  console.log("DragOver");
+["dragenter", "dragover"].forEach((event) => {
+  dropArea?.addEventListener(event, highlight, false);
 });
 
-dropElement?.addEventListener("dragleave", (event) => {
-  console.log("DragLeave");
-  dropElement.style.backgroundColor = "white";
+["dragleave", "drop"].forEach((event) => {
+  dropArea?.addEventListener(event, removeHighlight, false);
 });
+
+function highlight(_e) {
+  dropArea?.classList.add("highlight");
+}
+
+function removeHighlight(_e) {
+  dropArea?.classList.remove("highlight");
+}
+
+function preventDefaults(e) {
+  e.preventDefault();
+  e.stopPropagation();
+}

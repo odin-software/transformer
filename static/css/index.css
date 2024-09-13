@@ -1,5 +1,27 @@
+main {
+
+}
+
+h2 {
+  text-align: center;
+  text-decoration: underline wavy var(--quartary-color);
+}
+
 #drop-area {
-  min-height: 10em;
-  min-width: 18em;
-  border: 2px solid #880000;
+}
+
+#drop-area.highlight {
+  background-color: var(--primary-color);
+}
+
+#input-element {
+  display: none;
+}
+
+#input-label {
+  cursor: pointer;
+  padding: 1em;
+
+  color: var(--tertiary-color);
+  background-color: var(--quartary-color);
 }

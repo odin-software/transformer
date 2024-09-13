@@ -27,5 +27,21 @@ func main() {
 		}
 	})
 
+	mux.HandleFunc("POST /clasify", func(w http.ResponseWriter, r *http.Request) {
+		r.ParseMultipartForm(10 << 20)
+		file, header, err := r.FormFile("file")
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+		log.Println("------")
+		log.Println(header.Filename)
+		log.Println(header.Size)
+		log.Println("------")
+		w.WriteHeader(http.StatusOK)
+	})
+
 	http.ListenAndServe(":9090", mux)
 }
