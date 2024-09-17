@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -10,10 +9,27 @@ import (
 	"time"
 )
 
-const STATIC_DIR = "files/queue/"
+type Operation int
+
+const (
+	Convert Operation = iota
+	Flip
+	Resize
+)
+
+type QueueItem struct {
+	File   string
+	Op     Operation
+	Params []string
+}
+
+const QUEUE_DIR = "files/queue/"
+const DONE_DIR = "files/done/"
 
 func main() {
-	ticker := time.NewTicker(2 * time.Minute)
+	// queue := []QueueItem{}
+	queueTicker := time.NewTicker(20 * time.Second)
+	doneTicker := time.NewTicker(3 * time.Minute)
 
 	mux := http.NewServeMux()
 
@@ -61,29 +77,19 @@ func main() {
 			return
 		}
 
+		ConvertToWebP(header.Filename)
+
 		w.WriteHeader(http.StatusOK)
 	})
 
 	go http.ListenAndServe(":9090", mux)
 
-	for range ticker.C {
-		cleanupQueue()
-	}
-}
-
-func cleanupQueue() {
-	dir, err := os.ReadDir(STATIC_DIR)
-	if err != nil {
-		panic(err)
-	}
-	for _, entry := range dir {
-		if entry.IsDir() {
-			continue
+	go func() {
+		for range queueTicker.C {
+			CleanupDirectory(QUEUE_DIR)
 		}
-		fileName := fmt.Sprintf("%s/%s", STATIC_DIR, entry.Name())
-		err := os.Remove(fileName)
-		if err != nil {
-			log.Printf("error cleaning up file: %s", fileName)
-		}
+	}()
+	for range doneTicker.C {
+		CleanupDirectory(DONE_DIR)
 	}
 }
