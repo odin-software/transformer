@@ -1,9 +1,11 @@
 .actions {
   display: flex;
   flex-direction: row;
+  align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 2em;
-  margin-top: 1em;
+  margin-top: 2em;
 }
 
 .ac {
@@ -12,8 +14,19 @@
   padding: 1em;
 
   border: 2px solid var(--primary-color);
+  border-radius: 8px;
+
+  &:hover {
+    color: var(--tertiary-color);
+    background-color: var(--quartary-color);
+  }
 }
 
-.cs {
 
+.cs {
+  cursor: not-allowed;
+  background-color: gray;
+}
+.cs:hover {
+  background-color: gray;
 }
