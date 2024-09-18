@@ -1,5 +1,3 @@
 ### Transformer
 
-### How to run
-
-**npm** run
+Web application for file / image manipulation.
