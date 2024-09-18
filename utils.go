@@ -9,6 +9,21 @@ import (
 	"github.com/h2non/bimg"
 )
 
+func InitializeDirectories() {
+	if _, err := os.Stat(QUEUE_DIR); os.IsNotExist(err) {
+		err := os.MkdirAll(QUEUE_DIR, 0755)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if _, err := os.Stat(DONE_DIR); os.IsNotExist(err) {
+		err := os.MkdirAll(DONE_DIR, 0755)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
 func GetTypeFromString(t string) bimg.ImageType {
 	switch t {
 	case "webp":

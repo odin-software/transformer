@@ -13,6 +13,8 @@ const QUEUE_DIR = "files/queue/"
 const DONE_DIR = "files/done/"
 
 func main() {
+	InitializeDirectories()
+
 	queueTicker := time.NewTicker(20 * time.Second)
 	doneTicker := time.NewTicker(3 * time.Minute)
 
