@@ -13,7 +13,15 @@
 <body>
 
 </body>
-{{ template "body" }}
+<main>
+  <header class="header-title">
+    <h1>Transformer</h1>
+    {{ if . }}
+    <h4 class="subtitle">{{.}}</h4>
+    {{ end }}
+  </header>
+  {{ template "body" }}
+</main>
 {{ template "scripts" }}
 
 </html>

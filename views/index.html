@@ -3,20 +3,12 @@
 {{ end }}
 
 {{ define "body" }}
-<main>
-  <h2>Transformer</h2>
-  <form action="/clasify" method="post" enctype="multipart/form-data">
-    <input id="input-element" name="file" type="file" multiple accept="image/*" onchange="handleFiles(this.files)">
-    <label id="input-label" for="input-element">Select or drop your files</label>
-    <button id="submit-drop" type="submit">Submit</button>
-  </form>
-  <ul id="file-list"></ul>
-  <div id="backdrop" class="backdrop">
-    <p>Drop your files here</p>
-  </div>
-</main>
+<div class="actions">
+  <a class="ac" href="/convert">File convertor</a>
+  <a class="ac" href="/compress">File compressor</a>
+  <a class="ac cs" href="/resize">File resizer</a>
+</div>
 {{ end }}
 
 {{ define "scripts" }}
-<script src="/static/js/index.js"></script>
 {{ end }}

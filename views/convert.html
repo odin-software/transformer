@@ -1,0 +1,32 @@
+{{ define "head" }}
+<link rel="stylesheet" href="/static/css/convert.css" />
+{{ end }}
+
+{{ define "body" }}
+<div class="type-selector">
+  <span>Convert to </span>
+  <select name="file-type" id="file-select">
+    <option value="webp">WebP</option>
+    <option value="png">PNG</option>
+    <option value="jpeg">JPEG</option>
+    <option value="heic">HEIC</option>
+  </select>
+</div>
+<form>
+  <input id="input-element" name="file" type="file" multiple accept="image/*" onchange="handleFiles(this.files)">
+  <label id="input-label" for="input-element">Select or drop your files</label>
+</form>
+<p id="error">Unsupported image format</p>
+<ul id="file-list"></ul>
+<p>The link to download your files will only last for about 5 minutes</p>
+<div id="backdrop" class="backdrop">
+  <p>Drop your files here</p>
+</div>
+<div id="progress" class="backdrop">
+  <span>Processing...</span>
+</div>
+{{ end }}
+
+{{ define "scripts" }}
+<script src="/static/js/convert.js"></script>
+{{ end }}

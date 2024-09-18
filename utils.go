@@ -9,6 +9,20 @@ import (
 	"github.com/h2non/bimg"
 )
 
+func GetTypeFromString(t string) bimg.ImageType {
+	switch t {
+	case "webp":
+		return bimg.WEBP
+	case "png":
+		return bimg.PNG
+	case "heif":
+		return bimg.HEIF
+	case "jpeg":
+		return bimg.JPEG
+	}
+	return bimg.WEBP
+}
+
 func CleanupDirectory(DIR string) {
 	dir, err := os.ReadDir(DIR)
 	if err != nil {
@@ -26,18 +40,17 @@ func CleanupDirectory(DIR string) {
 	}
 }
 
-func ConvertToWebP(file string) error {
+func ConvertTo(file string, extention string, tp bimg.ImageType) (string, error) {
 	buffer, err := bimg.Read("files/queue/" + file)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		return "", err
 	}
-	newImage, err := bimg.NewImage(buffer).Convert(bimg.WEBP)
+	newImage, err := bimg.NewImage(buffer).Convert(tp)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-	}
-	if bimg.NewImage(newImage).Type() != "webp" {
-		fmt.Println("why")
+		return "", err
 	}
 	strs := strings.Split(file, ".")
-	return os.WriteFile("files/done/"+strs[0]+".webp", newImage, 0644)
+	newFilePath := "files/done/" + strs[0] + "." + extention
+
+	return newFilePath, os.WriteFile(newFilePath, newImage, 0644)
 }

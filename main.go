@@ -9,25 +9,10 @@ import (
 	"time"
 )
 
-type Operation int
-
-const (
-	Convert Operation = iota
-	Flip
-	Resize
-)
-
-type QueueItem struct {
-	File   string
-	Op     Operation
-	Params []string
-}
-
 const QUEUE_DIR = "files/queue/"
 const DONE_DIR = "files/done/"
 
 func main() {
-	// queue := []QueueItem{}
 	queueTicker := time.NewTicker(20 * time.Second)
 	doneTicker := time.NewTicker(3 * time.Minute)
 
@@ -53,8 +38,24 @@ func main() {
 		}
 	})
 
-	mux.HandleFunc("POST /clasify", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /convert", func(w http.ResponseWriter, r *http.Request) {
+		t, err := template.ParseFiles("views/layout.html", "views/convert.html")
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		err = t.ExecuteTemplate(w, "layout", "Convert")
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	})
+
+	mux.HandleFunc("POST /convert/{to}", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(10 << 20)
+		to := r.PathValue("to")
 		file, header, err := r.FormFile("file")
 		if err != nil {
 			log.Println(err)
@@ -77,9 +78,15 @@ func main() {
 			return
 		}
 
-		ConvertToWebP(header.Filename)
+		t := GetTypeFromString(to)
+		filePath, err := ConvertTo(header.Filename, to, t)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
-		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(filePath))
 	})
 
 	go http.ListenAndServe(":9090", mux)
