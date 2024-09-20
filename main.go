@@ -138,7 +138,6 @@ func main() {
 			return
 		}
 
-		log.Println(val)
 		filePath, err := Compress(header.Filename, val)
 		if err != nil {
 			log.Println(err)
