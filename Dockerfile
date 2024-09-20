@@ -3,9 +3,6 @@ FROM golang:1.22
 
 WORKDIR /app
 
-
-# start
-
 RUN apt-get update && apt-get install -y \
   build-essential \
   ninja-build \
@@ -27,7 +24,6 @@ RUN apt-get install -y \
   libgirepository1.0-dev \
   liborc-dev
 
-
 ARG VIPS_VERSION=8.13.0
 ARG VIPS_URL=https://github.com/libvips/libvips/releases/download
 
@@ -45,8 +41,6 @@ ENV LD_LIBRARY_PATH /usr/local/lib
 ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
 
 COPY . ./
-
-# end
 
 RUN go mod download
 

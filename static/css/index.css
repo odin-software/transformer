@@ -10,6 +10,7 @@
 
 .ac {
   text-decoration: none;
+  letter-spacing: 1px;
   color: var(--primary-color);
   padding: 1em;
 

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -55,6 +56,21 @@ func main() {
 		}
 	})
 
+	mux.HandleFunc("GET /compress", func(w http.ResponseWriter, r *http.Request) {
+		t, err := template.ParseFiles("views/layout.html", "views/compress.html")
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		err = t.ExecuteTemplate(w, "layout", "Compress")
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	})
+
 	mux.HandleFunc("POST /convert/{to}", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(10 << 20)
 		to := r.PathValue("to")
@@ -82,6 +98,48 @@ func main() {
 
 		t := GetTypeFromString(to)
 		filePath, err := ConvertTo(header.Filename, to, t)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Write([]byte(filePath))
+	})
+
+	mux.HandleFunc("POST /compress", func(w http.ResponseWriter, r *http.Request) {
+		r.ParseMultipartForm(10 << 20)
+		per := r.FormValue("per")
+		val, err := strconv.Atoi(per)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		file, header, err := r.FormFile("file")
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+
+		dst, err := os.Create("files/queue/" + header.Filename)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		defer dst.Close()
+
+		if _, err := io.Copy(dst, file); err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		log.Println(val)
+		filePath, err := Compress(header.Filename, val)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)

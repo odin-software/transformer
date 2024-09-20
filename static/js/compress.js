@@ -1,8 +1,8 @@
 /** @type {HTMLSelectElement|null} */
 // @ts-ignore
-const selectType = document.getElementById("file-select");
+const selectType = document.getElementById("compress-select");
 /** @type {string[]} */
-const converted = [];
+const compressed = [];
 
 backdrop?.addEventListener("drop", handleDrop, false);
 
@@ -13,7 +13,7 @@ function handleDrop(event) {
 }
 
 function handleFiles(files) {
-  converted.length = 0;
+  compressed.length = 0;
   showprogress();
   unshowerror();
   if (Array.isArray(files)) {
@@ -35,7 +35,7 @@ function generateCompressList() {
   if (fileList) {
     fileList.innerHTML = "";
   }
-  converted.forEach((url) => {
+  compressed.forEach((url) => {
     const name = url.replace("files/done/", "");
     const li = document.createElement("li");
     const a = document.createElement("a");
@@ -48,11 +48,12 @@ function generateCompressList() {
 }
 
 async function uploadFile(file) {
-  const typeTo = selectType?.value || "webp";
-  const url = `/convert/${typeTo}`;
+  const per = selectType?.value || "90";
+  const url = `/compress`;
   const formData = new FormData();
 
   formData.append("file", file);
+  formData.append("per", per);
 
   const res = await fetch(url, {
     method: "POST",
@@ -64,5 +65,5 @@ async function uploadFile(file) {
     return;
   }
   const text = await res.text();
-  converted.push(text);
+  compressed.push(text);
 }

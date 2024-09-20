@@ -69,3 +69,19 @@ func ConvertTo(file string, extention string, tp bimg.ImageType) (string, error)
 
 	return newFilePath, os.WriteFile(newFilePath, newImage, 0644)
 }
+
+func Compress(file string, per int) (string, error) {
+	buffer, err := bimg.Read("files/queue/" + file)
+	if err != nil {
+		return "", err
+	}
+	newImage, err := bimg.NewImage(buffer).Process(bimg.Options{
+		Quality: per,
+	})
+	if err != nil {
+		return "", err
+	}
+	newFilePath := "files/done/" + file
+
+	return newFilePath, os.WriteFile(newFilePath, newImage, 0644)
+}
