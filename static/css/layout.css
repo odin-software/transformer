@@ -50,7 +50,7 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 3rem;
   min-height: 100vh;
   width: 100%;
@@ -114,6 +114,35 @@ main {
   color: var(--quartary-color);
   opacity: 0.8;
   margin-bottom: 1rem;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+  flex-grow: 1;
+  justify-content: center;
+}
+
+.footer {
+  padding: 2rem 0 1rem 0;
+  flex-shrink: 0;
+}
+
+.repo-link {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--quartary-color);
+  text-decoration: none;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  letter-spacing: 0.3px;
+}
+
+.repo-link:hover {
+  opacity: 0.9;
+  color: var(--primary-color);
 }
 
 @media screen and (max-width: 768px) {
