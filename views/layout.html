@@ -6,6 +6,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/static/css/layout.css" />
+  <link rel="icon" href="/static/favicon.png" type="image/png">
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+
   {{ template "head" }}
   <title>Transformer</title>
 </head>
@@ -14,13 +17,21 @@
 
 </body>
 <main>
-  <header class="header-title">
-    <h1><a href="/">Transformer</a></h1>
-    {{ if . }}
-    <h4 class="subtitle">{{.}}</h4>
-    {{ end }}
-  </header>
-  {{ template "body" }}
+  <div class="content-wrapper">
+    <header class="header-title">
+      <h1><a href="/">Transformer</a></h1>
+      {{ if . }}
+      <h4 class="subtitle">{{.}}</h4>
+      {{ end }}
+    </header>
+    {{ template "body" }}
+  </div>
+
+  <footer class="footer">
+    <a href="https://github.com/odin-software/transformer" target="_blank" rel="noopener noreferrer" class="repo-link">
+      View on GitHub
+    </a>
+  </footer>
 </main>
 {{ template "scripts" }}
 

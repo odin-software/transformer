@@ -4,6 +4,40 @@ const selectType = document.getElementById("compress-select");
 /** @type {string[]} */
 const compressed = [];
 
+function showErrorMessage(message, statusCode) {
+  const errorP = document.getElementById("error");
+  if (!errorP) return;
+
+  // Map status codes to user-friendly messages
+  let displayMessage = message;
+  switch (statusCode) {
+    case 400:
+      displayMessage = "Invalid file or compression setting - please check your upload";
+      break;
+    case 413:
+      displayMessage = "File too large - maximum 50MB allowed";
+      break;
+    case 415:
+      displayMessage = "Unsupported file type - only JPEG, PNG, WebP, and HEIC/HEIF are supported";
+      break;
+    case 500:
+      displayMessage = "Server error - please try again";
+      break;
+    default:
+      if (message && message.length > 0) {
+        displayMessage = message;
+      }
+  }
+
+  errorP.textContent = displayMessage;
+  errorP.classList.add("show");
+
+  // Auto-hide error after 5 seconds
+  setTimeout(() => {
+    errorP.classList.remove("show");
+  }, 5000);
+}
+
 backdrop?.addEventListener("drop", handleDrop, false);
 
 function handleDrop(event) {
@@ -55,15 +89,23 @@ async function uploadFile(file) {
   formData.append("file", file);
   formData.append("per", per);
 
-  const res = await fetch(url, {
-    method: "POST",
-    body: formData,
-  });
-  if (res.status === 500) {
-    showerror();
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      showErrorMessage(errorText, res.status);
+      unshowlist();
+      return;
+    }
+
+    const text = await res.text();
+    compressed.push(text);
+  } catch (error) {
+    showErrorMessage("Network error - please check your connection", 0);
     unshowlist();
-    return;
   }
-  const text = await res.text();
-  compressed.push(text);
 }
