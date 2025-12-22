@@ -121,8 +121,8 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		response := map[string]string{
-			"job_id": job.ID,
-			"status": string(job.Status),
+			"job_id":  job.ID,
+			"status":  string(job.Status),
 			"message": "Job queued for processing",
 		}
 		json.NewEncoder(w).Encode(response)
@@ -182,8 +182,8 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		response := map[string]string{
-			"job_id": job.ID,
-			"status": string(job.Status),
+			"job_id":  job.ID,
+			"status":  string(job.Status),
 			"message": "Job queued for processing",
 		}
 		json.NewEncoder(w).Encode(response)
@@ -209,7 +209,7 @@ func main() {
 		}
 	})
 
-	go http.ListenAndServe(":9090", mux)
+	go http.ListenAndServe(":7004", mux)
 
 	go func() {
 		for range queueTicker.C {

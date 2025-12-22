@@ -46,6 +46,6 @@ RUN go mod download
 
 RUN go build -o ./tmp/main .
 
-EXPOSE 9090
+EXPOSE 7004
 
 CMD ["./tmp/main"]
