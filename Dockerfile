@@ -52,7 +52,6 @@ FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   libglib2.0-0 \
-  libgobject-2.0-0 \
   libgirepository-1.0-1 \
   libexpat1 \
   librsvg2-2 \
