@@ -1,0 +1,25 @@
+services:
+  transformer:
+    image: localhost:5000/transformer:latest
+    container_name: transformer
+    restart: unless-stopped
+    ports:
+      - "7004:7004"
+    networks:
+      - proxy
+      - internal
+    volumes:
+      - transformer-queue:/app/files/queue
+      - transformer-done:/app/files/done
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+volumes:
+  transformer-queue:
+  transformer-done:
+
+networks:
+  proxy:
+    external: true
+  internal:
+    external: true

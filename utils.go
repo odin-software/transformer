@@ -17,17 +17,11 @@ import (
 )
 
 func InitializeDirectories() {
-	if _, err := os.Stat(QUEUE_DIR); os.IsNotExist(err) {
-		err := os.MkdirAll(QUEUE_DIR, 0755)
-		if err != nil {
-			panic(err)
-		}
+	if err := os.MkdirAll(QUEUE_DIR, 0755); err != nil {
+		log.Fatalf("failed to create queue directory: %v", err)
 	}
-	if _, err := os.Stat(DONE_DIR); os.IsNotExist(err) {
-		err := os.MkdirAll(DONE_DIR, 0755)
-		if err != nil {
-			panic(err)
-		}
+	if err := os.MkdirAll(DONE_DIR, 0755); err != nil {
+		log.Fatalf("failed to create done directory: %v", err)
 	}
 }
 
@@ -48,56 +42,30 @@ func GetTypeFromString(t string) bimg.ImageType {
 func CleanupDirectory(DIR string) {
 	dir, err := os.ReadDir(DIR)
 	if err != nil {
-		panic(err)
+		log.Printf("error reading dir for cleanup %s: %v", DIR, err)
+		return
 	}
+	var count int
 	for _, entry := range dir {
 		if entry.IsDir() {
 			continue
 		}
 		fileName := fmt.Sprintf("%s/%s", DIR, entry.Name())
-		err := os.Remove(fileName)
-		if err != nil {
+		if err := os.Remove(fileName); err != nil {
 			log.Printf("error cleaning up file: %s", fileName)
+		} else {
+			count++
 		}
 	}
-}
-
-func ConvertTo(file string, extention string, tp bimg.ImageType) (string, error) {
-	buffer, err := bimg.Read("files/queue/" + file)
-	if err != nil {
-		return "", err
+	if count > 0 {
+		log.Printf("Cleanup %s: removed %d file(s)", DIR, count)
 	}
-	newImage, err := bimg.NewImage(buffer).Convert(tp)
-	if err != nil {
-		return "", err
-	}
-	strs := strings.Split(file, ".")
-	newFilePath := "files/done/" + strs[0] + "." + extention
-
-	return newFilePath, os.WriteFile(newFilePath, newImage, 0644)
-}
-
-func Compress(file string, per int) (string, error) {
-	buffer, err := bimg.Read("files/queue/" + file)
-	if err != nil {
-		return "", err
-	}
-	newImage, err := bimg.NewImage(buffer).Process(bimg.Options{
-		Quality: per,
-	})
-	if err != nil {
-		return "", err
-	}
-	newFilePath := "files/done/" + file
-
-	return newFilePath, os.WriteFile(newFilePath, newImage, 0644)
 }
 
 func generateUniqueID() string {
-	timestamp := time.Now().UnixNano()
-	randomBytes := make([]byte, 4)
+	randomBytes := make([]byte, 16)
 	rand.Read(randomBytes)
-	return fmt.Sprintf("%d_%s", timestamp, hex.EncodeToString(randomBytes))
+	return hex.EncodeToString(randomBytes)
 }
 
 func sanitizeFilename(filename string) string {
@@ -163,10 +131,17 @@ func validateImageFile(file multipart.File) error {
 		return nil
 	}
 
-	// HEIF/HEIC: ... ftyp ... (more complex, simplified check)
+	// HEIF/HEIC: ftyp box at offset 4, brand at offset 8
+	// The ftyp box size is stored in bytes 0-3 (big-endian); limit scan to the box.
 	if n >= 12 && buffer[4] == 0x66 && buffer[5] == 0x74 && buffer[6] == 0x79 && buffer[7] == 0x70 {
-		// Check for HEIC/HEIF brands
-		for i := 8; i < n-4; i++ {
+		boxSize := int(buffer[0])<<24 | int(buffer[1])<<16 | int(buffer[2])<<8 | int(buffer[3])
+		if boxSize < 12 {
+			boxSize = 12
+		}
+		if boxSize > n {
+			boxSize = n
+		}
+		for i := 8; i <= boxSize-4; i++ {
 			if buffer[i] == 0x68 && buffer[i+1] == 0x65 && buffer[i+2] == 0x69 && buffer[i+3] == 0x63 {
 				return nil // HEIC
 			}
@@ -222,9 +197,10 @@ type Job struct {
 	ID           string    `json:"id"`
 	Type         JobType   `json:"type"`
 	Status       JobStatus `json:"status"`
-	InputFile    string    `json:"input_file"`
+	InputFile    string    `json:"-"`
 	OutputFile   string    `json:"output_file,omitempty"`
-	ErrorMessage string    `json:"error_message,omitempty"`
+	ErrorMessage string    `json:"-"`
+	UserError    string    `json:"error,omitempty"`
 	CreatedAt    time.Time `json:"created_at"`
 	StartedAt    *time.Time `json:"started_at,omitempty"`
 	CompletedAt  *time.Time `json:"completed_at,omitempty"`
@@ -286,6 +262,7 @@ func UpdateJobStatus(jobID string, status JobStatus, errorMsg ...string) {
 		job.CompletedAt = &now
 		if len(errorMsg) > 0 {
 			job.ErrorMessage = errorMsg[0]
+			job.UserError = "Processing failed"
 		}
 	}
 }
@@ -300,6 +277,18 @@ func SetJobOutput(jobID, outputFile string) {
 	}
 }
 
+func isKnownJobOutput(outputPath string) bool {
+	jobStore.mu.RLock()
+	defer jobStore.mu.RUnlock()
+
+	for _, job := range jobStore.jobs {
+		if job.Status == JobCompleted && job.OutputFile == outputPath {
+			return true
+		}
+	}
+	return false
+}
+
 func EnqueueJob(job *Job) {
 	select {
 	case jobQueue <- job:
@@ -310,6 +299,31 @@ func EnqueueJob(job *Job) {
 	}
 }
 
+func PruneCompletedJobs(maxAge time.Duration) {
+	jobStore.mu.Lock()
+	defer jobStore.mu.Unlock()
+
+	now := time.Now()
+	var count int
+	for id, job := range jobStore.jobs {
+		if job.Status == JobCompleted || job.Status == JobFailed {
+			if job.CompletedAt != nil && now.Sub(*job.CompletedAt) > maxAge {
+				delete(jobStore.jobs, id)
+				count++
+			}
+		}
+	}
+	if count > 0 {
+		log.Printf("Pruned %d completed/failed job(s) from store", count)
+	}
+}
+
+func removeQueueFile(filename string) {
+	path := QUEUE_DIR + filename
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		log.Printf("error removing queue file %s: %v", path, err)
+	}
+}
 
 func StartJobWorkers(numWorkers int) {
 	for i := 0; i < numWorkers; i++ {
@@ -343,6 +357,8 @@ func jobWorker(workerID int) {
 			log.Printf("Worker %d completed job %s successfully", workerID, job.ID)
 			UpdateJobStatus(job.ID, JobCompleted)
 		}
+
+		removeQueueFile(job.InputFile)
 	}
 }
 
@@ -363,8 +379,8 @@ func processConvertJob(job *Job) error {
 		return fmt.Errorf("failed to convert image: %w", err)
 	}
 
-	strs := strings.Split(job.InputFile, ".")
-	outputFilename := strs[0] + "." + job.ConvertTo
+	ext := filepath.Ext(job.InputFile)
+	outputFilename := strings.TrimSuffix(job.InputFile, ext) + "." + job.ConvertTo
 	outputPath := "files/done/" + outputFilename
 
 	if err := os.WriteFile(outputPath, newImage, 0644); err != nil {

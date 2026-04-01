@@ -1,5 +1,4 @@
-
-FROM golang:1.22
+FROM golang:1.22 AS builder
 
 WORKDIR /app
 
@@ -40,12 +39,45 @@ RUN wget ${VIPS_URL}/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.gz \
 ENV LD_LIBRARY_PATH /usr/local/lib
 ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
 
-COPY . ./
+WORKDIR /app
 
+COPY go.mod go.sum ./
 RUN go mod download
 
-RUN go build -o ./tmp/main .
+COPY . .
+RUN go build -o /app/transformer .
+
+# Runtime stage
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  libglib2.0-0 \
+  libexpat1 \
+  librsvg2-2 \
+  libpng16-16 \
+  libwebp7 \
+  libjpeg62-turbo \
+  libexif12 \
+  liblcms2-2 \
+  liborc-0.4-0 \
+  ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/local/lib /usr/local/lib
+ENV LD_LIBRARY_PATH /usr/local/lib
+
+WORKDIR /app
+
+COPY --from=builder /app/transformer .
+COPY --from=builder /app/views ./views
+COPY --from=builder /app/static ./static
+
+# Create non-root user
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+RUN mkdir -p /app/files/queue /app/files/done && chown -R appuser:appgroup /app
+
+USER appuser
 
 EXPOSE 7004
 
-CMD ["./tmp/main"]
+CMD ["./transformer"]

@@ -2,12 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -25,9 +28,23 @@ func main() {
 	mux := http.NewServeMux()
 
 	fs := http.FileServer(http.Dir("./static"))
-	doneFs := http.FileServer(http.Dir("./files/done"))
 	mux.Handle("GET /static/", http.StripPrefix("/static/", fs))
-	mux.Handle("GET /files/done/", http.StripPrefix("/files/done/", doneFs))
+
+	mux.HandleFunc("GET /files/done/{filename}", func(w http.ResponseWriter, r *http.Request) {
+		filename := r.PathValue("filename")
+
+		// Only serve files that belong to a known job.
+		if !isKnownJobOutput("files/done/" + filename) {
+			http.Error(w, "File not found", http.StatusNotFound)
+			return
+		}
+
+		filePath := filepath.Join("files/done", filepath.Base(filename))
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filepath.Base(filename)))
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		http.ServeFile(w, r, filePath)
+	})
 
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		t, err := template.ParseFiles("views/layout.html", "views/index.html")
@@ -74,9 +91,18 @@ func main() {
 		}
 	})
 
+	validFormats := map[string]bool{"webp": true, "png": true, "jpeg": true, "heif": true}
+
 	mux.HandleFunc("POST /convert/{to}", func(w http.ResponseWriter, r *http.Request) {
-		r.ParseMultipartForm(10 << 20)
 		to := r.PathValue("to")
+		if !validFormats[to] {
+			http.Error(w, "Unsupported format - use webp, png, jpeg, or heif", http.StatusBadRequest)
+			return
+		}
+		if err := r.ParseMultipartForm(10 << 20); err != nil {
+			http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+			return
+		}
 		file, header, err := r.FormFile("file")
 		if err != nil {
 			log.Printf("Error getting form file: %v", err)
@@ -129,7 +155,10 @@ func main() {
 	})
 
 	mux.HandleFunc("POST /compress", func(w http.ResponseWriter, r *http.Request) {
-		r.ParseMultipartForm(10 << 20)
+		if err := r.ParseMultipartForm(10 << 20); err != nil {
+			http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+			return
+		}
 		per := r.FormValue("per")
 		val, err := strconv.Atoi(per)
 		if err != nil || val < 1 || val > 100 {
@@ -209,14 +238,27 @@ func main() {
 		}
 	})
 
-	go http.ListenAndServe(":7004", mux)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		log.Printf("Server starting on port 7004")
+		if err := http.ListenAndServe(":7004", mux); err != nil {
+			log.Fatalf("Server failed: %v", err)
+		}
+	}()
 
 	go func() {
 		for range queueTicker.C {
 			CleanupDirectory(QUEUE_DIR)
 		}
 	}()
-	for range doneTicker.C {
-		CleanupDirectory(DONE_DIR)
-	}
+	go func() {
+		for range doneTicker.C {
+			CleanupDirectory(DONE_DIR)
+			PruneCompletedJobs(5 * time.Minute)
+		}
+	}()
+
+	wg.Wait()
 }
