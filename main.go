@@ -91,7 +91,7 @@ func main() {
 		}
 	})
 
-	validFormats := map[string]bool{"webp": true, "png": true, "jpeg": true, "heif": true}
+	validFormats := map[string]bool{"webp": true, "png": true, "jpeg": true}
 
 	mux.HandleFunc("POST /convert/{to}", func(w http.ResponseWriter, r *http.Request) {
 		to := r.PathValue("to")
@@ -119,7 +119,7 @@ func main() {
 
 		if err := validateImageFile(file); err != nil {
 			log.Printf("File type validation failed: %v", err)
-			http.Error(w, "Invalid file type - only JPEG, PNG, WebP, and HEIC/HEIF are supported", http.StatusUnsupportedMediaType)
+			http.Error(w, "Invalid file type - only JPEG, PNG, and WebP are supported", http.StatusUnsupportedMediaType)
 			return
 		}
 
@@ -183,7 +183,7 @@ func main() {
 
 		if err := validateImageFile(file); err != nil {
 			log.Printf("File type validation failed: %v", err)
-			http.Error(w, "Invalid file type - only JPEG, PNG, WebP, and HEIC/HEIF are supported", http.StatusUnsupportedMediaType)
+			http.Error(w, "Invalid file type - only JPEG, PNG, and WebP are supported", http.StatusUnsupportedMediaType)
 			return
 		}
 

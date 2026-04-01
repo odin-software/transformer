@@ -52,10 +52,17 @@ FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   libglib2.0-0 \
+  libgobject-2.0-0 \
+  libgirepository-1.0-1 \
   libexpat1 \
   librsvg2-2 \
+  libcairo2 \
+  libpango-1.0-0 \
+  libpangocairo-1.0-0 \
   libpng16-16 \
   libwebp7 \
+  libwebpdemux2 \
+  libwebpmux3 \
   libjpeg62-turbo \
   libexif12 \
   liblcms2-2 \
@@ -63,8 +70,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /usr/local/lib /usr/local/lib
-ENV LD_LIBRARY_PATH /usr/local/lib
+# Copy only shared libraries from the vips build, not static libs or pkgconfig
+COPY --from=builder /usr/local/lib/*.so* /usr/local/lib/
+RUN ldconfig
 
 WORKDIR /app
 

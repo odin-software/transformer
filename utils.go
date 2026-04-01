@@ -31,8 +31,6 @@ func GetTypeFromString(t string) bimg.ImageType {
 		return bimg.WEBP
 	case "png":
 		return bimg.PNG
-	case "heif":
-		return bimg.HEIF
 	case "jpeg":
 		return bimg.JPEG
 	}
@@ -131,27 +129,7 @@ func validateImageFile(file multipart.File) error {
 		return nil
 	}
 
-	// HEIF/HEIC: ftyp box at offset 4, brand at offset 8
-	// The ftyp box size is stored in bytes 0-3 (big-endian); limit scan to the box.
-	if n >= 12 && buffer[4] == 0x66 && buffer[5] == 0x74 && buffer[6] == 0x79 && buffer[7] == 0x70 {
-		boxSize := int(buffer[0])<<24 | int(buffer[1])<<16 | int(buffer[2])<<8 | int(buffer[3])
-		if boxSize < 12 {
-			boxSize = 12
-		}
-		if boxSize > n {
-			boxSize = n
-		}
-		for i := 8; i <= boxSize-4; i++ {
-			if buffer[i] == 0x68 && buffer[i+1] == 0x65 && buffer[i+2] == 0x69 && buffer[i+3] == 0x63 {
-				return nil // HEIC
-			}
-			if buffer[i] == 0x6D && buffer[i+1] == 0x69 && buffer[i+2] == 0x66 && buffer[i+3] == 0x31 {
-				return nil // HEIF
-			}
-		}
-	}
-
-	return fmt.Errorf("unsupported file format - only JPEG, PNG, WebP, and HEIC/HEIF are allowed")
+	return fmt.Errorf("unsupported file format - only JPEG, PNG, and WebP are allowed")
 }
 
 // validateFileSize checks if file size is within limits
