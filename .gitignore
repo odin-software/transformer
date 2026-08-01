@@ -1,3 +1,6 @@
 /tmp
 .DS_Store
 /files
+
+# Directorio de trabajo en desarrollo (en produccion: TRANSFORMER_DATA_DIR)
+files/

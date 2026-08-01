@@ -48,7 +48,7 @@ func CleanupDirectory(DIR string) {
 		if entry.IsDir() {
 			continue
 		}
-		fileName := fmt.Sprintf("%s/%s", DIR, entry.Name())
+		fileName := filepath.Join(DIR, entry.Name())
 		if err := os.Remove(fileName); err != nil {
 			log.Printf("error cleaning up file: %s", fileName)
 		} else {
@@ -172,14 +172,14 @@ const (
 )
 
 type Job struct {
-	ID           string    `json:"id"`
-	Type         JobType   `json:"type"`
-	Status       JobStatus `json:"status"`
-	InputFile    string    `json:"-"`
-	OutputFile   string    `json:"output_file,omitempty"`
-	ErrorMessage string    `json:"-"`
-	UserError    string    `json:"error,omitempty"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID           string     `json:"id"`
+	Type         JobType    `json:"type"`
+	Status       JobStatus  `json:"status"`
+	InputFile    string     `json:"-"`
+	OutputFile   string     `json:"output_file,omitempty"`
+	ErrorMessage string     `json:"-"`
+	UserError    string     `json:"error,omitempty"`
+	CreatedAt    time.Time  `json:"created_at"`
 	StartedAt    *time.Time `json:"started_at,omitempty"`
 	CompletedAt  *time.Time `json:"completed_at,omitempty"`
 
@@ -297,7 +297,7 @@ func PruneCompletedJobs(maxAge time.Duration) {
 }
 
 func removeQueueFile(filename string) {
-	path := QUEUE_DIR + filename
+	path := filepath.Join(QUEUE_DIR, filename)
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		log.Printf("error removing queue file %s: %v", path, err)
 	}
@@ -345,7 +345,7 @@ func processConvertJob(job *Job) error {
 		return fmt.Errorf("convert target format not specified")
 	}
 
-	inputPath := "files/queue/" + job.InputFile
+	inputPath := filepath.Join(QUEUE_DIR, job.InputFile)
 	buffer, err := bimg.Read(inputPath)
 	if err != nil {
 		return fmt.Errorf("failed to read input file: %w", err)
@@ -359,7 +359,7 @@ func processConvertJob(job *Job) error {
 
 	ext := filepath.Ext(job.InputFile)
 	outputFilename := strings.TrimSuffix(job.InputFile, ext) + "." + job.ConvertTo
-	outputPath := "files/done/" + outputFilename
+	outputPath := filepath.Join(DONE_DIR, outputFilename)
 
 	if err := os.WriteFile(outputPath, newImage, 0644); err != nil {
 		return fmt.Errorf("failed to save converted image: %w", err)
@@ -375,7 +375,7 @@ func processCompressJob(job *Job) error {
 		return fmt.Errorf("invalid quality setting: %d", job.Quality)
 	}
 
-	inputPath := "files/queue/" + job.InputFile
+	inputPath := filepath.Join(QUEUE_DIR, job.InputFile)
 	buffer, err := bimg.Read(inputPath)
 	if err != nil {
 		return fmt.Errorf("failed to read input file: %w", err)
@@ -388,7 +388,7 @@ func processCompressJob(job *Job) error {
 		return fmt.Errorf("failed to compress image: %w", err)
 	}
 
-	outputPath := "files/done/" + job.InputFile
+	outputPath := filepath.Join(DONE_DIR, job.InputFile)
 
 	if err := os.WriteFile(outputPath, newImage, 0644); err != nil {
 		return fmt.Errorf("failed to save compressed image: %w", err)

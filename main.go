@@ -1,10 +1,12 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -14,8 +16,46 @@ import (
 	"time"
 )
 
-const QUEUE_DIR = "files/queue/"
-const DONE_DIR = "files/done/"
+// Plantillas y assets viajan dentro del binario: el deploy es un solo
+// ejecutable, sin directorios que sincronizar al lado.
+//
+//go:embed views static
+var assetsFS embed.FS
+
+// dataDir es la raiz de trabajo en disco. En produccion apunta al
+// StateDirectory de systemd; en desarrollo cae en ./files.
+var dataDir = func() string {
+	if d := os.Getenv("TRANSFORMER_DATA_DIR"); d != "" {
+		return d
+	}
+	return "files"
+}()
+
+var QUEUE_DIR = filepath.Join(dataDir, "queue")
+var DONE_DIR = filepath.Join(dataDir, "done")
+
+// listenAddr permite mover el puerto sin recompilar.
+var listenAddr = func() string {
+	if p := os.Getenv("PORT"); p != "" {
+		return ":" + p
+	}
+	return ":7004"
+}()
+
+// renderView arma una vista a partir del layout y una plantilla, ambos
+// leidos del FS embebido.
+func renderView(w http.ResponseWriter, view string, data any) {
+	t, err := template.ParseFS(assetsFS, "views/layout.html", "views/"+view)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if err := t.ExecuteTemplate(w, "layout", data); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
 
 func main() {
 	InitializeDirectories()
@@ -27,19 +67,22 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	fs := http.FileServer(http.Dir("./static"))
-	mux.Handle("GET /static/", http.StripPrefix("/static/", fs))
+	staticSub, err := fs.Sub(assetsFS, "static")
+	if err != nil {
+		log.Fatalf("no se pudo abrir el FS embebido: %v", err)
+	}
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticSub))))
 
 	mux.HandleFunc("GET /files/done/{filename}", func(w http.ResponseWriter, r *http.Request) {
 		filename := r.PathValue("filename")
 
 		// Only serve files that belong to a known job.
-		if !isKnownJobOutput("files/done/" + filename) {
+		if !isKnownJobOutput(filepath.Join(DONE_DIR, filepath.Base(filename))) {
 			http.Error(w, "File not found", http.StatusNotFound)
 			return
 		}
 
-		filePath := filepath.Join("files/done", filepath.Base(filename))
+		filePath := filepath.Join(DONE_DIR, filepath.Base(filename))
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filepath.Base(filename)))
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -47,48 +90,15 @@ func main() {
 	})
 
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		t, err := template.ParseFiles("views/layout.html", "views/index.html")
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		err = t.ExecuteTemplate(w, "layout", "")
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		renderView(w, "index.html", "")
 	})
 
 	mux.HandleFunc("GET /convert", func(w http.ResponseWriter, r *http.Request) {
-		t, err := template.ParseFiles("views/layout.html", "views/convert.html")
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		err = t.ExecuteTemplate(w, "layout", "Convert")
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		renderView(w, "convert.html", "Convert")
 	})
 
 	mux.HandleFunc("GET /compress", func(w http.ResponseWriter, r *http.Request) {
-		t, err := template.ParseFiles("views/layout.html", "views/compress.html")
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		err = t.ExecuteTemplate(w, "layout", "Compress")
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		renderView(w, "compress.html", "Compress")
 	})
 
 	validFormats := map[string]bool{"webp": true, "png": true, "jpeg": true}
@@ -124,7 +134,7 @@ func main() {
 		}
 
 		uniqueFilename := createUniqueFilename(header.Filename)
-		queuePath := "files/queue/" + uniqueFilename
+		queuePath := filepath.Join(QUEUE_DIR, uniqueFilename)
 
 		dst, err := os.Create(queuePath)
 		if err != nil {
@@ -188,7 +198,7 @@ func main() {
 		}
 
 		uniqueFilename := createUniqueFilename(header.Filename)
-		queuePath := "files/queue/" + uniqueFilename
+		queuePath := filepath.Join(QUEUE_DIR, uniqueFilename)
 
 		dst, err := os.Create(queuePath)
 		if err != nil {
@@ -242,8 +252,8 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Printf("Server starting on port 7004")
-		if err := http.ListenAndServe(":7004", mux); err != nil {
+		log.Printf("Server starting on %s (datos en %s)", listenAddr, dataDir)
+		if err := http.ListenAndServe(listenAddr, mux); err != nil {
 			log.Fatalf("Server failed: %v", err)
 		}
 	}()
