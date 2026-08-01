@@ -1,0 +1,25 @@
+name: Deploy transformer
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '*.md'
+      - 'LICENSE'
+
+jobs:
+  deploy:
+    runs-on: host
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Con CGO (bimg enlaza contra libvips), asi que NO se pone CGO_ENABLED=0
+      # ni se cross-compila: se construye en mimir, que es donde corre el runner.
+      # Requiere gcc, libc6-dev, pkg-config y libvips-dev instalados en el host.
+      - name: Build binary
+        run: /usr/local/go/bin/go build -o /tmp/transformer-linux-amd64 .
+
+      - name: Deploy
+        run: sudo /usr/local/bin/transformer-deploy /tmp/transformer-linux-amd64
